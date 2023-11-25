@@ -542,10 +542,10 @@ function drawBox(boxx, boxy, color, pixelx, pixely)
     end
 
     love.graphics.setColor(COLORS[color])
-    love.graphics.rectangle("fill", pixelx + 1, pixely + 1, BOXSIZE - 1, BOXSIZE - 1)
+    love.graphics.rectangle("fill", pixelx + 1, pixely + 1, BOXSIZE - 1 * SCALE, BOXSIZE - 1 * SCALE)
 
     love.graphics.setColor(LIGHTCOLORS[color])
-    love.graphics.rectangle("fill", pixelx + 1, pixely + 1, BOXSIZE - 4, BOXSIZE - 4)
+    love.graphics.rectangle("fill", pixelx + 1, pixely + 1, BOXSIZE - 4 * SCALE, BOXSIZE - 4 * SCALE)
     love.graphics.setColor(1, 1, 1)
 end
 
