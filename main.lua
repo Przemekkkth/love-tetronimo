@@ -1,8 +1,9 @@
 -- constants
+local SCALE = 1.5
 local FPS = 25
-local WINDOWWIDTH = 640
-local WINDOWHEIGHT = 480
-local BOXSIZE = 20
+local WINDOWWIDTH = SCALE * 640
+local WINDOWHEIGHT = SCALE * 480
+local BOXSIZE = SCALE * 20
 local BOARDWIDTH = 10
 local BOARDHEIGHT = 20
 local BLANK = '.'
@@ -248,8 +249,8 @@ function love.keyreleased(key)
             sounds.music = love.audio.newSource("assets/sounds/tetrisc.mid", "stream")
         end
         sounds.music:setLooping(true)
-        --sounds.music:setVolume(0.05)
-        --sounds.music:play()
+        sounds.music:setVolume(0.05)
+        sounds.music:play()
         
         setBlankBoard()
 
@@ -307,7 +308,6 @@ function love.update(dt)
                 nextPiece = getNewPiece()
                 lastFallTime = love.timer.getTime() -- reset lastFallTime
             end
-
 
             if not isValidPosition(0, 0) then
                 state = STATES.GAME_OVER
@@ -568,7 +568,7 @@ function drawNextPiece()
     
     love.graphics.print("Next: ", WINDOWWIDTH - 120, 80)
     -- draw the "next" piece
-    drawPiece(nextPiece, WINDOWWIDTH-120, 100)
+    drawPiece(nextPiece, WINDOWWIDTH-120*SCALE, 100)
     love.graphics.setColor(1, 1, 1)
 end
 
