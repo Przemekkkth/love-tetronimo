@@ -228,6 +228,7 @@ end
 
 function love.keyreleased(key)
     if state == "MENU" then
+        -- setup variables for the start of the game
         state = "GAME"
         -- Generate a random value between 0 and 1
         local randomValue = love.math.random()
@@ -300,8 +301,7 @@ function love.update(dt)
 
             if not isValidPosition(board, fallingPiece, 0, 0) then
                 state = "GAMEOVER"
-                
-                --return -- can't fit a new piece on the board, so game over
+                return -- can't fit a new piece on the board, so game over
             end
             -- handle moving the piece because of user input
             if (movingLeft or movingRight) and love.timer.getTime() - lastMoveSidewaysTime > MOVESIDEWAYSFREQ then
@@ -313,6 +313,7 @@ function love.update(dt)
                 lastMoveSidewaysTime = love.timer.getTime()
             end
 
+            -- handle moving the piece because of user input
             if movingDown and love.timer.getTime() - lastMoveDownTime > MOVEDOWNFREQ and isValidPosition(board, fallingPiece, 0, 1) then
                 fallingPiece['y'] = fallingPiece['y'] + 1
                 lastMoveDownTime = love.timer.getTime()
@@ -374,26 +375,27 @@ function showTextScreen(titleText, hintText)
 end
 
 function getBlankBoard()
+    -- return a random new piece in a random rotation and color
     local board = {}
-
     for i = 1, BOARDWIDTH do
         board[i] = {}
-
         for j = 1, BOARDHEIGHT do
             board[i][j] = BLANK
         end
     end
-
     return board
 end
 
 function calculateLevelAndFallFreq(score)
+    -- Based on the score, return the level the player is on and
+    -- how many seconds pass until a falling piece falls one space.
     local level = math.floor(score / 10) + 1
     local fallFreq = 0.27 - (level * 0.02)
     return level, fallFreq
 end
 
 function getNewPiece()
+    -- return a random new piece in a random rotation and color
     local keys = {"S", "Z", "J", "L", "I", "O", "T"}
     local randomValue = love.math.random(1, #keys)
     local randomKey = keys[randomValue]
@@ -401,7 +403,7 @@ function getNewPiece()
     newPiece["shape"] = randomKey
     newPiece["rotation"] = love.math.random(1, #PIECES[newPiece["shape"]])
     newPiece["x"] = math.floor(BOARDWIDTH/2) - math.floor(TEMPLATEWIDTH/2)
-    newPiece["y"] = -2
+    newPiece["y"] = -2 -- start it above the board (i.e. less than 0)
     newPiece["color"] = love.math.random(1, #COLORS)
 
     return newPiece
@@ -412,6 +414,7 @@ function isOnBoard(x, y)
 end
 
 function isValidPosition(board, piece, adjX, adjY)
+    -- Return true if the piece is within the board and not colliding
     if piece == nil then
         return
     end
@@ -443,76 +446,9 @@ function printTable(table, name)
     end
 end
 
-function drawBoard(board)
-    love.graphics.setColor(BORDERCOLOR)
-    love.graphics.rectangle("line", XMARGIN - 3, TOPMARGIN - 7, (BOARDWIDTH * BOXSIZE) + 8, (BOARDHEIGHT * BOXSIZE) + 8, 5)
-    
-    love.graphics.setColor(BGCOLOR)
-    love.graphics.rectangle("fill", XMARGIN, TOPMARGIN, BOXSIZE * BOARDWIDTH, BOXSIZE * BOARDHEIGHT)
-
-    for x = 1, BOARDWIDTH do
-        for y = 1, BOARDHEIGHT do
-            drawBox(x-1, y-1, board[x][y], nil, nil)
-        end
-    end
-    love.graphics.setColor(1, 1, 1)
-end
-
-function drawBox(boxx, boxy, color, pixelx, pixely)
-    if color == BLANK then
-        return
-    end
-
-    if pixelx == nil and pixely == nil then
-        pixelx, pixely = convertToPixelCoords(boxx, boxy)
-    end
-
-    love.graphics.setColor(COLORS[color])
-    love.graphics.rectangle("fill", pixelx + 1, pixely + 1, BOXSIZE - 1, BOXSIZE - 1)
-
-    love.graphics.setColor(LIGHTCOLORS[color])
-    love.graphics.rectangle("fill", pixelx + 1, pixely + 1, BOXSIZE - 4, BOXSIZE - 4)
-    love.graphics.setColor(1, 1, 1)
-end
-
-function drawStatus(score, level)
-    love.graphics.setFont(BASICFONT)
-    love.graphics.setColor(TEXTCOLOR)
-    local font = love.graphics.getFont()
-    local textWidth = font:getWidth("Score: " .. score)
-    local textHeight = font:getHeight()
-    love.graphics.print("Score: " .. score, WINDOWWIDTH - 150, 20)
-
-    local textWidth = font:getWidth("Level: " .. level)
-    love.graphics.print("Level: " .. level, WINDOWWIDTH - 150, 50)
-    love.graphics.setColor(1, 1, 1)
-end
-
-function drawNextPiece(piece)
-    love.graphics.setColor(TEXTCOLOR)
-    love.graphics.setFont(BASICFONT)
-    
-    love.graphics.print("Next: ", WINDOWWIDTH - 120, 80)
-
-    drawPiece(piece, WINDOWWIDTH-120, 100)
-    love.graphics.setColor(1, 1, 1)
-end
-
-function drawPiece(piece, pixelx, pixely)
-    local shapeToDraw = PIECES[piece["shape"]][piece["rotation"]]
-    if pixelx == nil and pixely == nil then
-        pixelx, pixely = convertToPixelCoords(piece["x"], piece["y"])
-    end
-    for x = 1, TEMPLATEWIDTH do
-       for y = 1, TEMPLATEHEIGHT do
-        if string.sub(shapeToDraw[y],x,x) ~= BLANK then
-            drawBox(nil, nil, piece["color"], pixelx + ((x-1) * BOXSIZE), pixely + ((y-1) * BOXSIZE))
-        end
-       end
-    end
-end
-
-function convertToPixelCoords(boxx, boxy) 
+function convertToPixelCoords(boxx, boxy)
+    -- Convert the given xy coordinates of the board to xy
+    -- coordinates of the location on the screen. 
     return (XMARGIN + (boxx * BOXSIZE)), (TOPMARGIN + (boxy * BOXSIZE))
 end
 
@@ -564,4 +500,81 @@ function isCompleteLine(board, y)
         end
     end
     return true
+end
+
+function drawBoard(board)
+    -- draw the border around the board
+    love.graphics.setColor(BORDERCOLOR)
+    love.graphics.rectangle("line", XMARGIN - 3, TOPMARGIN - 7, (BOARDWIDTH * BOXSIZE) + 8, (BOARDHEIGHT * BOXSIZE) + 8, 5)
+    
+    -- fill the background of the board
+    love.graphics.setColor(BGCOLOR)
+    love.graphics.rectangle("fill", XMARGIN, TOPMARGIN, BOXSIZE * BOARDWIDTH, BOXSIZE * BOARDHEIGHT)
+    -- draw the individual boxes on the board
+    for x = 1, BOARDWIDTH do
+        for y = 1, BOARDHEIGHT do
+            drawBox(x-1, y-1, board[x][y], nil, nil)
+        end
+    end
+    love.graphics.setColor(1, 1, 1)
+end
+
+function drawBox(boxx, boxy, color, pixelx, pixely)
+--[[ draw a single box (each tetromino piece has four boxes)
+     at xy coordinates on the board. Or, if pixelx & pixely
+     are specified, draw to the pixel coordinates stored in
+     pixelx & pixely (this is used for the "Next" piece).]]
+    if color == BLANK then
+        return
+    end
+
+    if pixelx == nil and pixely == nil then
+        pixelx, pixely = convertToPixelCoords(boxx, boxy)
+    end
+
+    love.graphics.setColor(COLORS[color])
+    love.graphics.rectangle("fill", pixelx + 1, pixely + 1, BOXSIZE - 1, BOXSIZE - 1)
+
+    love.graphics.setColor(LIGHTCOLORS[color])
+    love.graphics.rectangle("fill", pixelx + 1, pixely + 1, BOXSIZE - 4, BOXSIZE - 4)
+    love.graphics.setColor(1, 1, 1)
+end
+
+function drawStatus(score, level)
+    love.graphics.setFont(BASICFONT)
+    love.graphics.setColor(TEXTCOLOR)
+    local font = love.graphics.getFont()
+    local textWidth = font:getWidth("Score: " .. score)
+    local textHeight = font:getHeight()
+    love.graphics.print("Score: " .. score, WINDOWWIDTH - 150, 20)
+
+    local textWidth = font:getWidth("Level: " .. level)
+    love.graphics.print("Level: " .. level, WINDOWWIDTH - 150, 50)
+    love.graphics.setColor(1, 1, 1)
+end
+
+function drawNextPiece(piece)
+    love.graphics.setColor(TEXTCOLOR)
+    love.graphics.setFont(BASICFONT)
+    
+    love.graphics.print("Next: ", WINDOWWIDTH - 120, 80)
+    -- draw the "next" piece
+    drawPiece(piece, WINDOWWIDTH-120, 100)
+    love.graphics.setColor(1, 1, 1)
+end
+
+function drawPiece(piece, pixelx, pixely)
+    local shapeToDraw = PIECES[piece["shape"]][piece["rotation"]]
+    if pixelx == nil and pixely == nil then
+        -- if pixelx & pixely hasn't been specified, use the location stored in the piece data structure
+        pixelx, pixely = convertToPixelCoords(piece["x"], piece["y"])
+    end
+    -- draw each of the boxes that make up the piece
+    for x = 1, TEMPLATEWIDTH do
+       for y = 1, TEMPLATEHEIGHT do
+        if string.sub(shapeToDraw[y],x,x) ~= BLANK then
+            drawBox(nil, nil, piece["color"], pixelx + ((x-1) * BOXSIZE), pixely + ((y-1) * BOXSIZE))
+        end
+       end
+    end
 end
