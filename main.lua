@@ -1,149 +1,143 @@
 -- constants
-FPS = 25
-WINDOWWIDTH = 640
-WINDOWHEIGHT = 480
-BOXSIZE = 20
-BOARDWIDTH = 10
-BOARDHEIGHT = 20
-BLANK = '.'
-TITLE = 'Tetronimo'
-
-MOVESIDEWAYSFREQ = 0.15
-MOVEDOWNFREQ = 0.1
-
-XMARGIN = math.floor((WINDOWWIDTH - BOARDWIDTH * BOXSIZE) / 2)
-TOPMARGIN = WINDOWHEIGHT - (BOARDHEIGHT * BOXSIZE) - 5
-
+local FPS = 25
+local WINDOWWIDTH = 640
+local WINDOWHEIGHT = 480
+local BOXSIZE = 20
+local BOARDWIDTH = 10
+local BOARDHEIGHT = 20
+local BLANK = '.'
+local TITLE = 'Tetronimo'
+local MOVESIDEWAYSFREQ = 0.15
+local MOVEDOWNFREQ = 0.1
+local XMARGIN = math.floor((WINDOWWIDTH - BOARDWIDTH * BOXSIZE) / 2)
+local TOPMARGIN = WINDOWHEIGHT - (BOARDHEIGHT * BOXSIZE) - 5
 --               R    G    B
-WHITE       = {1.0, 1.0, 1.0} -- (255, 255, 255)
-GRAY        = {.72, .72, .72} -- (185, 185, 185)
-BLACK       = { .0,  .0,  .0} -- (  0,   0,   0)
-RED         = {.61,  .0,  .0} -- (155,   0,   0)
-LIGHTRED    = {.69,  .1,  .1} -- (175,  20,  20)
-GREEN       = { .0, .61,  .0} -- (  0, 155,   0)
-LIGHTGREEN  = { .1, .69,  .1} -- ( 20, 175,  20)
-BLUE        = { .0,  .0, .61} -- (  0,   0, 155)
-LIGHTBLUE   = { .1,  .1, .69} -- ( 20,  20, 175)
-YELLOW      = {.61, .61,  .0} -- (155, 155,   0)
-LIGHTYELLOW = {.69, .69,  .1} -- (175, 175,  20)
+local WHITE       = {1.0, 1.0, 1.0} -- (255, 255, 255)
+local GRAY        = {.72, .72, .72} -- (185, 185, 185)
+local BLACK       = { .0,  .0,  .0} -- (  0,   0,   0)
+local RED         = {.61,  .0,  .0} -- (155,   0,   0)
+local LIGHTRED    = {.69,  .1,  .1} -- (175,  20,  20)
+local GREEN       = { .0, .61,  .0} -- (  0, 155,   0)
+local LIGHTGREEN  = { .1, .69,  .1} -- ( 20, 175,  20)
+local BLUE        = { .0,  .0, .61} -- (  0,   0, 155)
+local LIGHTBLUE   = { .1,  .1, .69} -- ( 20,  20, 175)
+local YELLOW      = {.61, .61,  .0} -- (155, 155,   0)
+local LIGHTYELLOW = {.69, .69,  .1} -- (175, 175,  20)
 
-
-BORDERCOLOR = BLUE
-BGCOLOR = BLACK
-TEXTCOLOR = WHITE
-TEXTSHADOWCOLOR = GRAY
-COLORS      = {     BLUE,      GREEN,      RED,      YELLOW}
-LIGHTCOLORS = {LIGHTBLUE, LIGHTGREEN, LIGHTRED, LIGHTYELLOW}
-
+local BORDERCOLOR = BLUE
+local BGCOLOR = BLACK
+local TEXTCOLOR = WHITE
+local TEXTSHADOWCOLOR = GRAY
+local COLORS      = {     BLUE,      GREEN,      RED,      YELLOW}
+local LIGHTCOLORS = {LIGHTBLUE, LIGHTGREEN, LIGHTRED, LIGHTYELLOW}
 assert(#COLORS == #LIGHTCOLORS, "each color must have light color")
 
+local TEMPLATEWIDTH = 5
+local TEMPLATEHEIGHT = 5
 
-TEMPLATEWIDTH = 5
-TEMPLATEHEIGHT = 5
+local S_SHAPE_TEMPLATE = {{'.....',
+                           '.....',
+                           '..OO.',
+                           '.OO..',
+                           '.....'},
+                          {'.....',
+                           '..O..',
+                           '..OO.',
+                           '...O.',
+                           '.....'}}
 
-S_SHAPE_TEMPLATE = {{'.....',
-                     '.....',
-                     '..OO.',
-                     '.OO..',
-                     '.....'},
-                    {'.....',
-                     '..O..',
-                     '..OO.',
-                     '...O.',
-                     '.....'}}
+local Z_SHAPE_TEMPLATE = {{'.....',
+                           '.....',
+                           '.OO..',
+                           '..OO.',
+                           '.....'},
+                          {'.....',
+                           '..O..',
+                           '.OO..',
+                           '.O...',
+                           '.....'}}
 
-Z_SHAPE_TEMPLATE = {{'.....',
-                     '.....',
-                     '.OO..',
-                     '..OO.',
-                     '.....'},
-                    {'.....',
-                     '..O..',
-                     '.OO..',
-                     '.O...',
-                     '.....'}}
+local I_SHAPE_TEMPLATE = {{'..O..',
+                           '..O..',
+                           '..O..',
+                           '..O..',
+                           '.....'},
+                          {'.....',
+                           '.....',
+                           'OOOO.',
+                           '.....',
+                           '.....'}}
 
-I_SHAPE_TEMPLATE = {{'..O..',
-                     '..O..',
-                     '..O..',
-                     '..O..',
-                     '.....'},
-                    {'.....',
-                     '.....',
-                     'OOOO.',
-                     '.....',
-                     '.....'}}
+local O_SHAPE_TEMPLATE = {{'.....',
+                           '.....',
+                           '.OO..',
+                           '.OO..',
+                           '.....'}}
 
-O_SHAPE_TEMPLATE = {{'.....',
-                     '.....',
-                     '.OO..',
-                     '.OO..',
-                     '.....'}}
+local J_SHAPE_TEMPLATE = {{'.....',
+                           '.O...',
+                           '.OOO.',
+                           '.....',
+                           '.....'},
+                          {'.....',
+                           '..OO.',
+                           '..O..',
+                           '..O..',
+                           '.....'},
+                          {'.....',
+                           '.....',
+                           '.OOO.',
+                           '...O.',
+                           '.....'},
+                          {'.....',
+                           '..O..',
+                           '..O..',
+                           '.OO..',
+                           '.....'}}
 
-J_SHAPE_TEMPLATE = {{'.....',
-                     '.O...',
-                     '.OOO.',
-                     '.....',
-                     '.....'},
-                    {'.....',
-                     '..OO.',
-                     '..O..',
-                     '..O..',
-                     '.....'},
-                    {'.....',
-                     '.....',
-                     '.OOO.',
-                     '...O.',
-                     '.....'},
-                    {'.....',
-                     '..O..',
-                     '..O..',
-                     '.OO..',
-                     '.....'}}
+local L_SHAPE_TEMPLATE = {{'.....',
+                           '...O.',
+                           '.OOO.',
+                           '.....',
+                           '.....'},
+                          {'.....',
+                           '..O..',
+                           '..O..',
+                           '..OO.',
+                           '.....'},
+                          {'.....',
+                           '.....',
+                           '.OOO.',
+                           '.O...',
+                           '.....'},
+                          {'.....',
+                           '.OO..',
+                           '..O..',
+                           '..O..',
+                           '.....'}}
 
-L_SHAPE_TEMPLATE = {{'.....',
-                     '...O.',
-                     '.OOO.',
-                     '.....',
-                     '.....'},
-                    {'.....',
-                     '..O..',
-                     '..O..',
-                     '..OO.',
-                     '.....'},
-                    {'.....',
-                     '.....',
-                     '.OOO.',
-                     '.O...',
-                     '.....'},
-                    {'.....',
-                     '.OO..',
-                     '..O..',
-                     '..O..',
-                     '.....'}}
+local T_SHAPE_TEMPLATE = {{'.....',
+                           '..O..',
+                           '.OOO.',
+                           '.....',
+                           '.....'},
+                          {'.....',
+                           '..O..',
+                           '..OO.',
+                           '..O..',
+                           '.....'},
+                          {'.....',
+                           '.....',
+                           '.OOO.',
+                           '..O..',
+                           '.....'},
+                          {'.....',
+                           '..O..',
+                           '.OO..',
+                           '..O..',
+                           '.....'}}
 
-T_SHAPE_TEMPLATE = {{'.....',
-                     '..O..',
-                     '.OOO.',
-                     '.....',
-                     '.....'},
-                    {'.....',
-                     '..O..',
-                     '..OO.',
-                     '..O..',
-                     '.....'},
-                    {'.....',
-                     '.....',
-                     '.OOO.',
-                     '..O..',
-                     '.....'},
-                    {'.....',
-                     '..O..',
-                     '.OO..',
-                     '..O..',
-                     '.....'}}
-
-PIECES = {}
+local PIECES = {}
 PIECES["S"] = S_SHAPE_TEMPLATE
 PIECES["Z"] = Z_SHAPE_TEMPLATE
 PIECES["J"] = J_SHAPE_TEMPLATE         
@@ -152,26 +146,31 @@ PIECES["I"] = I_SHAPE_TEMPLATE
 PIECES["O"] = O_SHAPE_TEMPLATE         
 PIECES["T"] = T_SHAPE_TEMPLATE         
 
+local BASICFONT = love.graphics.newFont('/assets/fonts/freesansbold.ttf', 18)
+local BIGFONT   = love.graphics.newFont('/assets/fonts/freesansbold.ttf', 100)
+local STATES = {
+    MENU = "menu",
+    PAUSED = "paused",
+    GAME = "game",
+    GAME_OVER = "game_over"
+}
+local TIME_PER_FRAME = 1 / FPS
+local accumulatedTime = 0
+
+local state = STATES.MENU
+local sounds = {}
+
 -- initialization
 function love.load()
     love.window.setTitle(TITLE)
     love.window.setMode(WINDOWWIDTH, WINDOWHEIGHT)
     -- Set a seed for reproducibility (optional)
     love.math.setRandomSeed(os.time())
-
-    BASICFONT = love.graphics.newFont('/assets/fonts/freesansbold.ttf', 18)
-    BIGFONT   = love.graphics.newFont('/assets/fonts/freesansbold.ttf', 100)
-
     love.graphics.setBackgroundColor(BLACK)
-    state = "MENU" -- Game/Pause/GameOver
-    sounds = {}
-
-    accumulatedTime = 0
-    timePerFrame = 1 / FPS
 end
 
 function love.keypressed(key)
-    if state == "GAME" then
+    if state == STATES.GAME then
         if fallingPiece == nil then
             return
         end
@@ -227,9 +226,9 @@ function love.keypressed(key)
 end
 
 function love.keyreleased(key)
-    if state == "MENU" then
+    if state == STATES.MENU then
         -- setup variables for the start of the game
-        state = "GAME"
+        state = STATES.GAME
         -- Generate a random value between 0 and 1
         local randomValue = love.math.random()
         if randomValue > 0.5 then
@@ -256,9 +255,9 @@ function love.keyreleased(key)
         nextPiece = getNewPiece()
 
         accumulatedTime = 0
-    elseif state == "GAME" then
+    elseif state == STATES.GAME then
         if key == "p" then
-            state = "PAUSED"
+            state = STATES.PAUSED
             sounds.music:stop();
         elseif key == "left" or key == "a" then
             movingLeft = false
@@ -267,17 +266,17 @@ function love.keyreleased(key)
         elseif key == "down" or key == "s" then
             movingDown = false  
         end
-    elseif state == "PAUSED" then
+    elseif state == STATES.PAUSED then
         if key == "p" then
-            state = "GAME"
+            state = STATES.GAME
             sounds.music:play();
             lastFallTime =         love.timer.getTime()
             lastMoveDownTime =     love.timer.getTime()
             lastMoveSidewaysTime = love.timer.getTime()
             accumulatedTime = 0
         end
-    elseif state == "GAMEOVER" then
-        state = "MENU"
+    elseif state == STATES.GAME_OVER then
+        state = STATES.MENU
     end
 
     if key == "escape" then
@@ -286,10 +285,10 @@ function love.keyreleased(key)
  end
 
 function love.update(dt)
-    if state == "GAME" then
+    if state == STATES.GAME then
         accumulatedTime = accumulatedTime + dt
-        if accumulatedTime >= timePerFrame then
-            accumulatedTime = accumulatedTime - timePerFrame
+        if accumulatedTime >= TIME_PER_FRAME then
+            accumulatedTime = accumulatedTime - TIME_PER_FRAME
         
             if fallingPiece == nil then
                 -- No falling piece in play, so start a new piece at the top
@@ -300,7 +299,7 @@ function love.update(dt)
 
 
             if not isValidPosition(board, fallingPiece, 0, 0) then
-                state = "GAMEOVER"
+                state = STATES.GAME_OVER
                 return -- can't fit a new piece on the board, so game over
             end
             -- handle moving the piece because of user input
@@ -339,18 +338,18 @@ function love.update(dt)
 end
 
 function love.draw()
-    if state == "MENU" then
+    if state == STATES.MENU then
         showTextScreen("Tetromino", "Press a key to play.")
-    elseif state == "GAME" then
+    elseif state == STATES.GAME then
         drawBoard(board)
         drawStatus(score ,level)
         drawNextPiece(nextPiece)
         if fallingPiece ~= nil then
             drawPiece(fallingPiece)
         end
-    elseif state == "PAUSED" then
+    elseif state == STATES.PAUSED then
         showTextScreen("PAUSED", "Press \'p\' key to play.")
-    elseif state == "GAMEOVER" then
+    elseif state == STATES.GAME_OVER then
         showTextScreen("GAMEOVER", "     Your score: "..tostring(score)..
                                    "\nPress a key to play.")
     end
