@@ -163,18 +163,19 @@ function love.load()
     BIGFONT   = love.graphics.newFont('/assets/fonts/freesansbold.ttf', 100)
 
     love.graphics.setBackgroundColor(BLACK)
-    -- FONT = love.graphics.newFont('')
-    -- BASICFONT = pygame.font.Font('freesansbold.ttf', 18)
-    -- BIGFONT = pygame.font.Font('freesansbold.ttf', 100)
     state = "MENU" -- Game/Pause/GameOver
     sounds = {}
 
     accumulatedTime = 0
-    timePerFrame = 1 / 1
+    timePerFrame = 1 / FPS
 end
 
 function love.keypressed(key)
     if state == "GAME" then
+        if fallingPiece == nil then
+            return
+        end
+
         if (key == "left" or key == "a") and isValidPosition(board, fallingPiece, -1, 0) then
             fallingPiece["x"] = fallingPiece["x"] - 1
             movingLeft = true
@@ -214,12 +215,11 @@ function love.keypressed(key)
             movingDown = false
             movingLeft = false
             movingRight = false
-            print("Space")
             for i = 1, BOARDHEIGHT do
                 if not isValidPosition(board, fallingPiece, 0, i) then
                     break
                 end
-                fallingPiece['y'] = fallingPiece['y'] + i
+                fallingPiece['y'] = fallingPiece['y'] + (i - 1)
             end
 
         end
@@ -275,6 +275,8 @@ function love.keyreleased(key)
             lastMoveSidewaysTime = love.timer.getTime()
             accumulatedTime = 0
         end
+    elseif state == "GAMEOVER" then
+        state = "MENU"
     end
 
     if key == "escape" then
@@ -323,7 +325,7 @@ function love.update(dt)
                     -- falling piece has landed, set it on the board
                     addToBoard(board, fallingPiece)
                     score = score + removeCompleteLines(board)
-                    --level, fallFreq = calculateLevelAndFallFreq(score)
+                    level, fallFreq = calculateLevelAndFallFreq(score)
                     fallingPiece = nil
                 else
                     -- piece did not land, just move the piece down
@@ -337,38 +339,38 @@ end
 
 function love.draw()
     if state == "MENU" then
-        showTextScreen("Tetromino")
+        showTextScreen("Tetromino", "Press a key to play.")
     elseif state == "GAME" then
         drawBoard(board)
-        drawStatus(0,0)
+        drawStatus(score ,level)
         drawNextPiece(nextPiece)
         if fallingPiece ~= nil then
             drawPiece(fallingPiece)
         end
     elseif state == "PAUSED" then
-        showTextScreen("PAUSED")
+        showTextScreen("PAUSED", "Press \'p\' key to play.")
     elseif state == "GAMEOVER" then
-        showTextScreen("GAMEOVER")
+        showTextScreen("GAMEOVER", "     Your score: "..tostring(score)..
+                                   "\nPress a key to play.")
     end
 end
 
-function showTextScreen(text)
+function showTextScreen(titleText, hintText)
     love.graphics.setFont(BIGFONT)
     love.graphics.setColor(TEXTSHADOWCOLOR)
     local font = love.graphics.getFont()
-    local textWidth = font:getWidth(text)
+    local textWidth = font:getWidth(titleText)
     local textHeight = font:getHeight()
-    love.graphics.print(text, WINDOWWIDTH/2, WINDOWHEIGHT/2, 0, 1, 1, textWidth/2, textHeight/2)
+    love.graphics.print(titleText, WINDOWWIDTH/2, WINDOWHEIGHT/2, 0, 1, 1, textWidth/2, textHeight/2)
 
     love.graphics.setColor(TEXTCOLOR)
-    love.graphics.print(text, WINDOWWIDTH/2-3, WINDOWHEIGHT/2-3, 0, 1, 1, textWidth/2, textHeight/2)
+    love.graphics.print(titleText, WINDOWWIDTH/2-3, WINDOWHEIGHT/2-3, 0, 1, 1, textWidth/2, textHeight/2)
 
-    local press_key_text = "Press a key to play."
     love.graphics.setFont(BASICFONT)
     local font = love.graphics.getFont()
 
-    textWidth = font:getWidth(press_key_text)
-    love.graphics.print(press_key_text, WINDOWWIDTH/2, WINDOWHEIGHT/2+100, 0, 1, 1, textWidth/2, textHeight/2)
+    textWidth = font:getWidth(hintText)
+    love.graphics.print(hintText, WINDOWWIDTH/2, WINDOWHEIGHT/2+100, 0, 1, 1, textWidth/2, textHeight/2)
 end
 
 function getBlankBoard()
@@ -527,5 +529,39 @@ function addToBoard(board, piece)
 end
 
 function removeCompleteLines(board) 
-    return 1
+    -- Remove any completed lines on the board, move everything above them down, and return the number of complete lines.
+    numLinesRemoved = 0
+    y = BOARDHEIGHT -- start y at the bottom of the board
+    while y >= 1 do
+        if isCompleteLine(board, y) then
+            -- Remove the line and pull boxes down by one line.
+            for pullDownY = y, 1, -1 do
+                for x = 1, BOARDWIDTH do
+                    board[x][pullDownY] = board[x][pullDownY-1]
+                end
+            end
+            -- Set very top line to blank.
+            for x = 1, BOARDWIDTH do
+                board[x][1] = BLANK
+            end
+            numLinesRemoved = numLinesRemoved + 1
+            -- Note on the next iteration of the loop, y is the same.
+            -- This is so that if the line that was pulled down is also
+            -- complete, it will be removed.
+        else
+            y = y - 1 -- move on to check next row up
+        end
+    end
+
+    return numLinesRemoved
+end
+
+function isCompleteLine(board, y)
+    -- Return true if the line filled with boxes with no gaps.
+    for x = 1, BOARDWIDTH do
+        if board[x][y] == BLANK then
+            return false
+        end
+    end
+    return true
 end
