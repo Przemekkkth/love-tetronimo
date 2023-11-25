@@ -177,38 +177,38 @@ function love.keypressed(key)
         end
 
         if (key == "left" or key == "a") and isValidPosition(board, fallingPiece, -1, 0) then
-            fallingPiece["x"] = fallingPiece["x"] - 1
+            fallingPiece.x = fallingPiece.x - 1
             movingLeft = true
             movingRight = false
             lastMoveSidewaysTime = love.timer.getTime()
         elseif (key == "right" or key == "d") and isValidPosition(board, fallingPiece, 1, 0) then
-            fallingPiece["x"] = fallingPiece["x"] + 1
+            fallingPiece.x = fallingPiece.x + 1
             movingLeft = false
             movingRight = true
             lastMoveSidewaysTime = love.timer.getTime()
 
         elseif key == "up" or key == "w" then
-            local currentRotation = fallingPiece["rotation"]
-            fallingPiece["rotation"] = fallingPiece["rotation"] + 1
-            if fallingPiece["rotation"] > #PIECES[fallingPiece["shape"]] then
-                fallingPiece["rotation"] = 1
+            local currentRotation = fallingPiece.rotation
+            fallingPiece.rotation = fallingPiece.rotation + 1
+            if fallingPiece.rotation > #PIECES[fallingPiece.shape] then
+                fallingPiece.rotation = 1
             end
             if not isValidPosition(board, fallingPiece,0,0) then
-                fallingPiece["rotation"] = currentRotation
+                fallingPiece.rotation = currentRotation
             end
         elseif key == "q" then
-            local currentRotation = fallingPiece["rotation"]
-            fallingPiece["rotation"] = fallingPiece["rotation"] - 1
-            if fallingPiece["rotation"] < 1 then
-                fallingPiece["rotation"] = #PIECES[fallingPiece["shape"]]
+            local currentRotation = fallingPiece.rotation
+            fallingPiece.rotation = fallingPiece.rotation - 1
+            if fallingPiece.rotation < 1 then
+                fallingPiece.rotation = #PIECES[fallingPiece.shape]
             end
             if not isValidPosition(board, fallingPiece, 0, 0) then
-                fallingPiece['rotation'] = currentRotation
+                fallingPiece.rotation = currentRotation
             end
         elseif key == "down" or key == "s" then
             movingDown = True
             if isValidPosition(board, fallingPiece, 0, 1) then
-                fallingPiece['y'] = fallingPiece['y'] + 1
+                fallingPiece.y = fallingPiece.y + 1
                 lastMoveDownTime = love.timer.getTime()
             end
         elseif key == "space" then
@@ -219,7 +219,7 @@ function love.keypressed(key)
                 if not isValidPosition(board, fallingPiece, 0, i) then
                     break
                 end
-                fallingPiece['y'] = fallingPiece['y'] + (i - 1)
+                fallingPiece.y = fallingPiece.y + (i - 1)
             end
 
         end
@@ -306,16 +306,16 @@ function love.update(dt)
             -- handle moving the piece because of user input
             if (movingLeft or movingRight) and love.timer.getTime() - lastMoveSidewaysTime > MOVESIDEWAYSFREQ then
                 if movingLeft and isValidPosition(board, fallingPiece, -1, 0) then
-                    fallingPiece['x'] = fallingPiece['x'] - 1
+                    fallingPiece.x = fallingPiece.x - 1
                 elseif movingRight and isValidPosition(board, fallingPiece, 1, 0) then
-                    fallingPiece['x'] = fallingPiece['x'] + 1
+                    fallingPiece.x = fallingPiece.x + 1
                 end
                 lastMoveSidewaysTime = love.timer.getTime()
             end
 
             -- handle moving the piece because of user input
             if movingDown and love.timer.getTime() - lastMoveDownTime > MOVEDOWNFREQ and isValidPosition(board, fallingPiece, 0, 1) then
-                fallingPiece['y'] = fallingPiece['y'] + 1
+                fallingPiece.y = fallingPiece.y + 1
                 lastMoveDownTime = love.timer.getTime()
             end
 
@@ -400,11 +400,11 @@ function getNewPiece()
     local randomValue = love.math.random(1, #keys)
     local randomKey = keys[randomValue]
     local newPiece = {}
-    newPiece["shape"] = randomKey
-    newPiece["rotation"] = love.math.random(1, #PIECES[newPiece["shape"]])
-    newPiece["x"] = math.floor(BOARDWIDTH/2) - math.floor(TEMPLATEWIDTH/2)
-    newPiece["y"] = -2 -- start it above the board (i.e. less than 0)
-    newPiece["color"] = love.math.random(1, #COLORS)
+    newPiece.shape = randomKey
+    newPiece.rotation = love.math.random(1, #PIECES[newPiece.shape])
+    newPiece.x = math.floor(BOARDWIDTH/2) - math.floor(TEMPLATEWIDTH/2)
+    newPiece.y = -2 -- start it above the board (i.e. less than 0)
+    newPiece.color = love.math.random(1, #COLORS)
 
     return newPiece
 end
@@ -418,17 +418,17 @@ function isValidPosition(board, piece, adjX, adjY)
     if piece == nil then
         return
     end
-    local shape = PIECES[piece["shape"]][piece["rotation"]]
+    local shape = PIECES[piece.shape][piece.rotation]
     for x = 1, TEMPLATEWIDTH do
         for y = 1, TEMPLATEHEIGHT do
-            local isAboveBoard = y + piece["y"] + adjY < 1
+            local isAboveBoard = y + piece.y + adjY < 1
             if isAboveBoard or string.sub(shape[y], x, x) == BLANK then
                 goto continue
             end
-            if not isOnBoard(x + piece["x"] + adjX, y + piece["y"] + adjY) then
+            if not isOnBoard(x + piece.x + adjX, y + piece.y + adjY) then
                 return false
             end
-            if board[x + piece["x"] + adjX][y + piece["y"] + adjY] ~= BLANK then
+            if board[x + piece.x + adjX][y + piece.y + adjY] ~= BLANK then
                 return false
 
             end
@@ -453,12 +453,12 @@ function convertToPixelCoords(boxx, boxy)
 end
 
 function addToBoard(board, piece) 
-    local shape = PIECES[piece["shape"]][piece["rotation"]]
+    local shape = PIECES[piece.shape][piece.rotation]
    -- fill in the board based on piece's location, shape, and rotation
    for x = 1, TEMPLATEWIDTH do
     for y = 1, TEMPLATEHEIGHT do
         if string.sub(shape[y],x,x) ~= BLANK then
-            board[x+piece["x"]][y + piece["y"]] = piece["color"]
+            board[x+piece.x][y + piece.y] = piece.color
         end
     end
    end
@@ -564,16 +564,16 @@ function drawNextPiece(piece)
 end
 
 function drawPiece(piece, pixelx, pixely)
-    local shapeToDraw = PIECES[piece["shape"]][piece["rotation"]]
+    local shapeToDraw = PIECES[piece.shape][piece.rotation]
     if pixelx == nil and pixely == nil then
         -- if pixelx & pixely hasn't been specified, use the location stored in the piece data structure
-        pixelx, pixely = convertToPixelCoords(piece["x"], piece["y"])
+        pixelx, pixely = convertToPixelCoords(piece.x, piece.y)
     end
     -- draw each of the boxes that make up the piece
     for x = 1, TEMPLATEWIDTH do
        for y = 1, TEMPLATEHEIGHT do
         if string.sub(shapeToDraw[y],x,x) ~= BLANK then
-            drawBox(nil, nil, piece["color"], pixelx + ((x-1) * BOXSIZE), pixely + ((y-1) * BOXSIZE))
+            drawBox(nil, nil, piece.color, pixelx + ((x-1) * BOXSIZE), pixely + ((y-1) * BOXSIZE))
         end
        end
     end
