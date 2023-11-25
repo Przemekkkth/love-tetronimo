@@ -159,7 +159,18 @@ local accumulatedTime = 0
 
 local state = STATES.MENU
 local sounds = {}
-
+local score = 0
+local level = 0
+local fallFreq = 0
+local lastMoveDownTime = love.timer.getTime()
+local lastMoveSidewaysTime = love.timer.getTime()
+local lastFallTime = love.timer.getTime()
+local movingDown = false -- note: there is no movingUp variable
+local movingLeft = false
+local movingRight = false
+local board = {}
+local fallingPiece = {}
+local nextPiece = {}
 -- initialization
 function love.load()
     love.window.setTitle(TITLE)
@@ -175,12 +186,12 @@ function love.keypressed(key)
             return
         end
 
-        if (key == "left" or key == "a") and isValidPosition(board, fallingPiece, -1, 0) then
+        if (key == "left" or key == "a") and isValidPosition(-1, 0) then
             fallingPiece.x = fallingPiece.x - 1
             movingLeft = true
             movingRight = false
             lastMoveSidewaysTime = love.timer.getTime()
-        elseif (key == "right" or key == "d") and isValidPosition(board, fallingPiece, 1, 0) then
+        elseif (key == "right" or key == "d") and isValidPosition(1, 0) then
             fallingPiece.x = fallingPiece.x + 1
             movingLeft = false
             movingRight = true
@@ -192,7 +203,7 @@ function love.keypressed(key)
             if fallingPiece.rotation > #PIECES[fallingPiece.shape] then
                 fallingPiece.rotation = 1
             end
-            if not isValidPosition(board, fallingPiece,0,0) then
+            if not isValidPosition(0,0) then
                 fallingPiece.rotation = currentRotation
             end
         elseif key == "q" then
@@ -201,12 +212,12 @@ function love.keypressed(key)
             if fallingPiece.rotation < 1 then
                 fallingPiece.rotation = #PIECES[fallingPiece.shape]
             end
-            if not isValidPosition(board, fallingPiece, 0, 0) then
+            if not isValidPosition(0, 0) then
                 fallingPiece.rotation = currentRotation
             end
         elseif key == "down" or key == "s" then
             movingDown = True
-            if isValidPosition(board, fallingPiece, 0, 1) then
+            if isValidPosition(0, 1) then
                 fallingPiece.y = fallingPiece.y + 1
                 lastMoveDownTime = love.timer.getTime()
             end
@@ -215,7 +226,7 @@ function love.keypressed(key)
             movingLeft = false
             movingRight = false
             for i = 1, BOARDHEIGHT do
-                if not isValidPosition(board, fallingPiece, 0, i) then
+                if not isValidPosition(0, i) then
                     break
                 end
                 fallingPiece.y = fallingPiece.y + (i - 1)
@@ -237,10 +248,10 @@ function love.keyreleased(key)
             sounds.music = love.audio.newSource("assets/sounds/tetrisc.mid", "stream")
         end
         sounds.music:setLooping(true)
-        sounds.music:setVolume(0.05)
-        sounds.music:play()
+        --sounds.music:setVolume(0.05)
+        --sounds.music:play()
         
-        board = getBlankBoard()
+        setBlankBoard()
 
         lastMoveDownTime = love.timer.getTime()
         lastMoveSidewaysTime = love.timer.getTime()
@@ -249,7 +260,7 @@ function love.keyreleased(key)
         movingLeft = false
         movingRight = false
         score = 0
-        level, fallFreq = calculateLevelAndFallFreq(score)
+        level, fallFreq = calculateLevelAndFallFreq()
 
         fallingPiece = getNewPiece()
         nextPiece = getNewPiece()
@@ -298,22 +309,22 @@ function love.update(dt)
             end
 
 
-            if not isValidPosition(board, fallingPiece, 0, 0) then
+            if not isValidPosition(0, 0) then
                 state = STATES.GAME_OVER
                 return -- can't fit a new piece on the board, so game over
             end
             -- handle moving the piece because of user input
             if (movingLeft or movingRight) and love.timer.getTime() - lastMoveSidewaysTime > MOVESIDEWAYSFREQ then
-                if movingLeft and isValidPosition(board, fallingPiece, -1, 0) then
+                if movingLeft and isValidPosition(-1, 0) then
                     fallingPiece.x = fallingPiece.x - 1
-                elseif movingRight and isValidPosition(board, fallingPiece, 1, 0) then
+                elseif movingRight and isValidPosition(1, 0) then
                     fallingPiece.x = fallingPiece.x + 1
                 end
                 lastMoveSidewaysTime = love.timer.getTime()
             end
 
             -- handle moving the piece because of user input
-            if movingDown and love.timer.getTime() - lastMoveDownTime > MOVEDOWNFREQ and isValidPosition(board, fallingPiece, 0, 1) then
+            if movingDown and love.timer.getTime() - lastMoveDownTime > MOVEDOWNFREQ and isValidPosition(0, 1) then
                 fallingPiece.y = fallingPiece.y + 1
                 lastMoveDownTime = love.timer.getTime()
             end
@@ -321,15 +332,15 @@ function love.update(dt)
             -- let the piece fall if it is time to fall
             if love.timer.getTime() - lastFallTime > fallFreq then
                 -- see if the piece has landed
-                if not isValidPosition(board, fallingPiece, 0, 1) then
+                if not isValidPosition(0, 1) then
                     -- falling piece has landed, set it on the board
-                    addToBoard(board, fallingPiece)
-                    score = score + removeCompleteLines(board)
-                    level, fallFreq = calculateLevelAndFallFreq(score)
+                    addToBoard()
+                    score = score + removeCompleteLines()
+                    level, fallFreq = calculateLevelAndFallFreq()
                     fallingPiece = nil
                 else
                     -- piece did not land, just move the piece down
-                    fallingPiece['y'] = fallingPiece['y'] + 1
+                    fallingPiece.y = fallingPiece.y + 1
                     lastFallTime = love.timer.getTime()
                 end
             end
@@ -341,9 +352,9 @@ function love.draw()
     if state == STATES.MENU then
         showTextScreen("Tetromino", "Press a key to play.")
     elseif state == STATES.GAME then
-        drawBoard(board)
-        drawStatus(score ,level)
-        drawNextPiece(nextPiece)
+        drawBoard()
+        drawStatus()
+        drawNextPiece()
         if fallingPiece ~= nil then
             drawPiece(fallingPiece)
         end
@@ -373,9 +384,8 @@ function showTextScreen(titleText, hintText)
     love.graphics.print(hintText, WINDOWWIDTH/2, WINDOWHEIGHT/2+100, 0, 1, 1, textWidth/2, textHeight/2)
 end
 
-function getBlankBoard()
+function setBlankBoard()
     -- return a random new piece in a random rotation and color
-    local board = {}
     for i = 1, BOARDWIDTH do
         board[i] = {}
         for j = 1, BOARDHEIGHT do
@@ -385,7 +395,7 @@ function getBlankBoard()
     return board
 end
 
-function calculateLevelAndFallFreq(score)
+function calculateLevelAndFallFreq()
     -- Based on the score, return the level the player is on and
     -- how many seconds pass until a falling piece falls one space.
     local level = math.floor(score / 10) + 1
@@ -412,22 +422,22 @@ function isOnBoard(x, y)
     return x >= 1 and x <= BOARDWIDTH and y <= BOARDHEIGHT
 end
 
-function isValidPosition(board, piece, adjX, adjY)
+function isValidPosition(adjX, adjY)
     -- Return true if the piece is within the board and not colliding
-    if piece == nil then
+    if fallingPiece == nil then
         return
     end
-    local shape = PIECES[piece.shape][piece.rotation]
+    local shape = PIECES[fallingPiece.shape][fallingPiece.rotation]
     for x = 1, TEMPLATEWIDTH do
         for y = 1, TEMPLATEHEIGHT do
-            local isAboveBoard = y + piece.y + adjY < 1
+            local isAboveBoard = y + fallingPiece.y + adjY < 1
             if isAboveBoard or string.sub(shape[y], x, x) == BLANK then
                 goto continue
             end
-            if not isOnBoard(x + piece.x + adjX, y + piece.y + adjY) then
+            if not isOnBoard(x + fallingPiece.x + adjX, y + fallingPiece.y + adjY) then
                 return false
             end
-            if board[x + piece.x + adjX][y + piece.y + adjY] ~= BLANK then
+            if board[x + fallingPiece.x + adjX][y + fallingPiece.y + adjY] ~= BLANK then
                 return false
 
             end
@@ -451,19 +461,19 @@ function convertToPixelCoords(boxx, boxy)
     return (XMARGIN + (boxx * BOXSIZE)), (TOPMARGIN + (boxy * BOXSIZE))
 end
 
-function addToBoard(board, piece) 
-    local shape = PIECES[piece.shape][piece.rotation]
+function addToBoard() 
+    local shape = PIECES[fallingPiece.shape][fallingPiece.rotation]
    -- fill in the board based on piece's location, shape, and rotation
    for x = 1, TEMPLATEWIDTH do
     for y = 1, TEMPLATEHEIGHT do
         if string.sub(shape[y],x,x) ~= BLANK then
-            board[x+piece.x][y + piece.y] = piece.color
+            board[x + fallingPiece.x][y + fallingPiece.y] = fallingPiece.color
         end
     end
    end
 end
 
-function removeCompleteLines(board) 
+function removeCompleteLines() 
     -- Remove any completed lines on the board, move everything above them down, and return the number of complete lines.
     numLinesRemoved = 0
     y = BOARDHEIGHT -- start y at the bottom of the board
@@ -501,7 +511,7 @@ function isCompleteLine(board, y)
     return true
 end
 
-function drawBoard(board)
+function drawBoard()
     -- draw the border around the board
     love.graphics.setColor(BORDERCOLOR)
     love.graphics.rectangle("line", XMARGIN - 3, TOPMARGIN - 7, (BOARDWIDTH * BOXSIZE) + 8, (BOARDHEIGHT * BOXSIZE) + 8, 5)
@@ -539,7 +549,7 @@ function drawBox(boxx, boxy, color, pixelx, pixely)
     love.graphics.setColor(1, 1, 1)
 end
 
-function drawStatus(score, level)
+function drawStatus()
     love.graphics.setFont(BASICFONT)
     love.graphics.setColor(TEXTCOLOR)
     local font = love.graphics.getFont()
@@ -552,13 +562,13 @@ function drawStatus(score, level)
     love.graphics.setColor(1, 1, 1)
 end
 
-function drawNextPiece(piece)
+function drawNextPiece()
     love.graphics.setColor(TEXTCOLOR)
     love.graphics.setFont(BASICFONT)
     
     love.graphics.print("Next: ", WINDOWWIDTH - 120, 80)
     -- draw the "next" piece
-    drawPiece(piece, WINDOWWIDTH-120, 100)
+    drawPiece(nextPiece, WINDOWWIDTH-120, 100)
     love.graphics.setColor(1, 1, 1)
 end
 
