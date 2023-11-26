@@ -146,9 +146,8 @@ PIECES["L"] = L_SHAPE_TEMPLATE
 PIECES["I"] = I_SHAPE_TEMPLATE         
 PIECES["O"] = O_SHAPE_TEMPLATE         
 PIECES["T"] = T_SHAPE_TEMPLATE         
-
-local BASICFONT = love.graphics.newFont('/assets/fonts/freesansbold.ttf', 18)
-local BIGFONT   = love.graphics.newFont('/assets/fonts/freesansbold.ttf', 100)
+local BASICFONT = love.graphics.newFont('/assets/fonts/juniory.ttf', 18)
+local BIGFONT   = love.graphics.newFont('/assets/fonts/juniory.ttf', 100)
 local STATES = {
     MENU = "menu",
     PAUSED = "paused",
@@ -563,6 +562,9 @@ function drawStatus()
 end
 
 function drawNextPiece()
+    love.graphics.setColor(1, 1, 1, 0.5)
+    love.graphics.rectangle("fill", WINDOWWIDTH - 178, 80, BOXSIZE*TEMPLATEWIDTH, BOXSIZE*TEMPLATEHEIGHT )
+
     love.graphics.setColor(TEXTCOLOR)
     love.graphics.setFont(BASICFONT)
     
