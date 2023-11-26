@@ -146,7 +146,7 @@ PIECES["L"] = L_SHAPE_TEMPLATE
 PIECES["I"] = I_SHAPE_TEMPLATE         
 PIECES["O"] = O_SHAPE_TEMPLATE         
 PIECES["T"] = T_SHAPE_TEMPLATE         
-local BASICFONT = love.graphics.newFont('/assets/fonts/juniory.ttf', 18)
+local BASICFONT = love.graphics.newFont('/assets/fonts/juniory.ttf', 22)
 local BIGFONT   = love.graphics.newFont('/assets/fonts/juniory.ttf', 100)
 local STATES = {
     MENU = "menu",
@@ -178,6 +178,9 @@ function love.load()
     -- Set a seed for reproducibility (optional)
     love.math.setRandomSeed(os.time())
     love.graphics.setBackgroundColor(BLACK)
+
+    sounds.destroyRowSFX = love.audio.newSource("assets/sounds/pop1.ogg", "static")
+    sounds.destroyRowSFX:setVolume(1)
 end
 
 function love.keypressed(key)
@@ -360,7 +363,7 @@ function love.draw()
     elseif state == STATES.PAUSED then
         showTextScreen("PAUSED", "Press \'p\' key to play.")
     elseif state == STATES.GAME_OVER then
-        showTextScreen("GAMEOVER", "     Your score: "..tostring(score)..
+        showTextScreen("GAME OVER", "     Your score: "..tostring(score)..
                                    "\nPress a key to play.")
     end
 end
@@ -497,6 +500,9 @@ function removeCompleteLines()
         end
     end
 
+    if numLinesRemoved > 0 then
+        sounds.destroyRowSFX:play()
+    end
     return numLinesRemoved
 end
 
