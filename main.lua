@@ -519,7 +519,10 @@ end
 function drawBoard()
     -- draw the border around the board
     love.graphics.setColor(BORDERCOLOR)
-    love.graphics.rectangle("line", XMARGIN - 3, TOPMARGIN - 7, (BOARDWIDTH * BOXSIZE) + 8, (BOARDHEIGHT * BOXSIZE) + 8, 5)
+    love.graphics.rectangle("fill", XMARGIN - 13, TOPMARGIN - 7, 10, (BOARDHEIGHT * BOXSIZE) + 8)
+    love.graphics.rectangle("fill", XMARGIN - 3 + (BOARDWIDTH * BOXSIZE) + 8, TOPMARGIN - 7, 10, (BOARDHEIGHT * BOXSIZE) + 8)
+    love.graphics.rectangle("fill", XMARGIN - 13, TOPMARGIN - 17, (BOARDWIDTH * BOXSIZE) + 28, 10)
+    love.graphics.rectangle("fill", XMARGIN - 13, TOPMARGIN - 5 + (BOARDHEIGHT * BOXSIZE), (BOARDWIDTH * BOXSIZE) + 28, 10)
     
     -- fill the background of the board
     love.graphics.setColor(BGCOLOR)
